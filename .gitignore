@@ -1,0 +1,13 @@
+# package directories
+node_modules
+jspm_packages
+
+# Serverless directories
+.serverless
+
+# compile target directories
+.build
+
+# environment file
+.env.dev.json
+.env.prod.json

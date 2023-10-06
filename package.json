@@ -1,0 +1,16 @@
+{
+  "scripts": {
+    "preinstall": "npm i -g serverless",
+    "deploy": "sls deploy --stage prod",
+    "undeploy": "sls remove --stage prod",
+    "offline": "sls offline start --stage dev"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.119",
+    "serverless-lambda-edge-pre-existing-cloudfront": "^1.2.0",
+    "serverless-offline": "^12.0.4",
+    "serverless-plugin-typescript": "^2.1.5",
+    "typescript": "^3.9.10"
+  },
+  "dependencies": {}
+}

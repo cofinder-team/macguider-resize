@@ -1,0 +1,28 @@
+service: resize
+
+package:
+  individually: true
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-lambda-edge-pre-existing-cloudfront
+
+custom:
+  env: ${file(./.env.${opt:stage, 'dev'}.json)}
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs16.x
+  stage: ${opt:stage, 'dev'}
+  timeout: 30
+
+functions:
+  resize:
+    role: ${self:custom.env.LAMBDA_ROLE_ARN}
+    handler: src/handler.resizeHandler
+    events:
+      - preExistingCloudFront:
+          distributionId: ${self:custom.env.CLOUDFRONT_DISTRIBUTION_ID}
+          eventType: origin-response
+          pathPattern: '*'
