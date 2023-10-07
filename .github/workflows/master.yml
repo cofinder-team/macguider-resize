@@ -1,0 +1,40 @@
+name: serverless deployment
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Use Node.js 16.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+      - name: Install dependencies
+        run: npm install --production --arch=x64 --platform=linux
+      - name: Configure credentials
+        run: serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Set environment variables
+        uses: jsdaniell/create-json@1.1.2
+        with:
+          name: '.env.prod.json'
+          json: ${{ secrets.ENV_PROD_JSON }}
+      - name: Deploy
+        run: npm run deploy
+      - name: Send deployment notification
+        uses: rtCamp/action-slack-notify@v2.0.0
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: logs
+          SLACK_USERNAME: github-actions
+          SLACK_MESSAGE: |
+            *${{ github.repository }}* has been deployed to *${{ github.ref }}* by *${{ github.actor }}*
+            ${{ github.event.head_commit.message }}
+            ${{ github.event.head_commit.url }}
