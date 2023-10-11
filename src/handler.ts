@@ -5,7 +5,9 @@ import {
   Context,
   Handler,
 } from 'aws-lambda';
+import querystring from 'querystring';
 import { PromiseResult } from 'aws-sdk/lib/request';
+import sharp, { FormatEnum, Metadata, Sharp } from 'sharp';
 
 const s3: S3 = new S3({ region: 'ap-northeast-2' });
 const bucket: string = 'macguider-image';
@@ -39,6 +41,13 @@ const resizeHandler: Handler = async (
     });
   }
 
+  const params: { [key: string]: any } = querystring.parse(request.querystring);
+  const { w, h, q, f } = params;
+
+  if (!w && !h && !q && !f) {
+    return callback(null, response);
+  }
+
   const s3Object: PromiseResult<S3.GetObjectOutput, AWSError> = await s3
     .getObject({ Bucket: bucket, Key: key })
     .promise();
@@ -61,7 +70,67 @@ const resizeHandler: Handler = async (
     });
   }
 
-  return callback(null, response);
+  const origin: Buffer = s3Object.Body as Buffer;
+
+  const width: number | undefined = w ? parseInt(w) : undefined;
+  const height: number | undefined = h ? parseInt(h) : undefined;
+  const quality: number = Math.max(
+    q && !isNaN(Number(q)) ? parseInt(q) : 100,
+    0,
+  );
+
+  const format: keyof FormatEnum = f
+    ? ['jpeg', 'png', 'webp', 'tiff'].includes(f)
+      ? f
+      : 'jpeg'
+    : extension;
+
+  const resize = async (
+    origin: Buffer,
+    width: number | undefined,
+    height: number | undefined,
+    quality: number,
+    format: keyof FormatEnum,
+  ): Promise<Buffer> => {
+    const image: Sharp = sharp(origin);
+    const metaData: Metadata = await image.metadata();
+
+    const { width: originWidth, height: originHeight } = metaData;
+    if (!originWidth || !originHeight) {
+      return await image.toBuffer();
+    }
+
+    if ((width && width < originWidth) || (height && height < originHeight)) {
+      image.resize({ width, height, fit: 'cover', background: 'white' });
+    }
+
+    if (format !== extension || quality < 100) {
+      image.toFormat(format, { quality });
+    }
+
+    const buffer: Buffer = await image.toBuffer();
+    const length: number = Buffer.byteLength(buffer, 'base64');
+
+    if (length > 1 * 1024 * 1024) {
+      return resize(origin, width, height, quality * 0.8, format);
+    }
+
+    return buffer;
+  };
+
+  const buffer: Buffer = await resize(origin, width, height, quality, format);
+
+  return callback(null, {
+    ...response,
+    status: 200,
+    statusDescription: 'OK',
+    headers: {
+      ...response.headers,
+      'content-type': [{ key: 'Content-Type', value: `image/${format}` }],
+    },
+    body: buffer.toString('base64'),
+    bodyEncoding: 'base64',
+  });
 };
 
 export { resizeHandler };
