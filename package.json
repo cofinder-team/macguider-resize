@@ -7,10 +7,17 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.119",
+    "@types/aws-sdk": "^2.7.0",
+    "@types/sharp": "^0.25.1",
     "serverless-lambda-edge-pre-existing-cloudfront": "^1.2.0",
     "serverless-offline": "^12.0.4",
     "serverless-plugin-typescript": "^2.1.5",
     "typescript": "^3.9.10"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.425.0",
+    "aws-sdk": "^2.1471.0",
+    "querystring": "^0.2.1",
+    "sharp": "^0.32.6"
+  }
 }
