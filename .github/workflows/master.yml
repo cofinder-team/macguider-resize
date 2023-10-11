@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: 16.x
       - name: Install dependencies
-        run: npm install --production --arch=x64 --platform=linux
+        run: npm install --arch=x64 --platform=linux
       - name: Configure credentials
         run: serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY
         env:
