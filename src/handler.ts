@@ -101,7 +101,7 @@ const resizeHandler: Handler = async (
     }
 
     if ((width && width < originWidth) || (height && height < originHeight)) {
-      image.resize({ width, height, fit: 'cover', background: 'white' });
+      image.resize({ width, height, fit: 'contain', background: 'white' });
     }
 
     if (format !== extension || quality < 100) {
