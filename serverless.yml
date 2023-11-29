@@ -16,6 +16,8 @@ provider:
   runtime: nodejs16.x
   stage: ${opt:stage, 'dev'}
   timeout: 30
+    environment:
+      S3_BUCKET: ${self:custom.env.S3_BUCKET}
 
 functions:
   resize:

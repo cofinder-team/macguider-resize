@@ -10,7 +10,7 @@ import { PromiseResult } from 'aws-sdk/lib/request';
 import sharp, { FormatEnum, Metadata, Sharp } from 'sharp';
 
 const s3: S3 = new S3({ region: 'ap-northeast-2' });
-const bucket: string = 'macguider-image';
+const bucket: string = process.env.S3_BUCKET ?? '';
 
 const support: string[] = ['jpg', 'jpeg', 'png', 'svg', 'gif', 'webp', 'tiff'];
 
