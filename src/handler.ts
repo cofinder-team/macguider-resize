@@ -1,4 +1,4 @@
-import { AWSError, S3 } from 'aws-sdk';
+import { AWSError, S3, SSM } from 'aws-sdk';
 import {
   Callback,
   CloudFrontResponseEvent,
@@ -10,8 +10,7 @@ import { PromiseResult } from 'aws-sdk/lib/request';
 import sharp, { FormatEnum, Metadata, Sharp } from 'sharp';
 
 const s3: S3 = new S3({ region: 'ap-northeast-2' });
-const bucket: string = 'macguider-image';
-
+const ssm: SSM = new SSM({ region: 'ap-northeast-2' });
 const support: string[] = ['jpg', 'jpeg', 'png', 'svg', 'gif', 'webp', 'tiff'];
 
 const resizeHandler: Handler = async (
@@ -48,6 +47,16 @@ const resizeHandler: Handler = async (
     return callback(null, response);
   }
 
+  const parameter: PromiseResult<SSM.GetParameterResult, AWSError> = await ssm
+    .getParameter({ Name: 'S3_BUCKET' })
+    .promise();
+
+  const ssmError: AWSError | void = parameter.$response.error;
+  if (ssmError) {
+    return callback(ssmError);
+  }
+
+  const bucket: string = parameter?.Parameter?.Value ?? '';
   const s3Object: PromiseResult<S3.GetObjectOutput, AWSError> = await s3
     .getObject({ Bucket: bucket, Key: key })
     .promise();
